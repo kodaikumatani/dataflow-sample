@@ -1,0 +1,49 @@
+name: Deploy Dataflow
+
+on:
+  workflow_dispatch:
+
+env:
+  PROJECT_ID: apache-beam-test-482413
+  REGION: us-west1
+  JOB_NAME: go-job-1-1775060408659166000
+  GCS_BUCKET: gs://apache-beam-test-482413-dataflow
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+      id-token: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-go@v5
+        with:
+          go-version-file: go.mod
+
+      - uses: google-github-actions/auth@v2
+        with:
+          workload_identity_provider: ${{ secrets.WIF_PROVIDER }}
+          service_account: ${{ secrets.WIF_SERVICE_ACCOUNT }}
+
+      - uses: google-github-actions/setup-gcloud@v2
+
+      - name: Deploy to Dataflow
+        run: |
+          go run ./pubsub-bigtable/ \
+            --input_subscription=pubsub-bigtable-sub \
+            --bigtable_project=${{ env.PROJECT_ID }} \
+            --bigtable_instance=pubsub-bigtable \
+            --bigtable_table=pubsub-bigtable \
+            --window_size=10 \
+            --runner=dataflow \
+            --project=${{ env.PROJECT_ID }} \
+            --region=${{ env.REGION }} \
+            --machine_type=e2-standard-2 \
+            --staging_location=${{ env.GCS_BUCKET }}/staging \
+            --temp_location=${{ env.GCS_BUCKET }}/temp \
+            --update \
+            --job_name=${{ env.JOB_NAME }} \
+            --execute_async
