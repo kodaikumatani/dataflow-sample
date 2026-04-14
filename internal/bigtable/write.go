@@ -18,6 +18,8 @@ type Writer struct {
 	Project  string
 	Instance string
 	Table    string
+	Family   string
+	Column   string
 
 	client *bigtable.Client
 	table  *bigtable.Table
@@ -35,22 +37,21 @@ func (fn *Writer) Setup(ctx context.Context) error {
 	return nil
 }
 
-func (fn *Writer) ProcessElement(ctx context.Context, key string, iter func(**bigtable.Mutation) bool) error {
+func (fn *Writer) ProcessElement(ctx context.Context, key string, iter func(*[]byte) bool) error {
+	var keys []string
 	var muts []*bigtable.Mutation
 
-	var m *bigtable.Mutation
-	for iter(&m) {
-		muts = append(muts, m)
+	var b []byte
+	for iter(&b) {
+		mut := bigtable.NewMutation()
+		mut.Set(fn.Family, fn.Column, bigtable.Now(), b)
+
+		keys = append(keys, key)
+		muts = append(muts, mut)
 	}
 
 	if len(muts) == 0 {
 		return nil
-	}
-
-	// All mutations in this group share the same row key.
-	keys := make([]string, len(muts))
-	for i := range keys {
-		keys[i] = key
 	}
 
 	errs, err := fn.table.ApplyBulk(ctx, keys, muts)
