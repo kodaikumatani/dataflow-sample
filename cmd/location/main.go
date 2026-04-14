@@ -10,6 +10,7 @@ import (
 	"github.com/apache/beam/sdks/v2/go/pkg/beam/core/graph/window"
 	"github.com/apache/beam/sdks/v2/go/pkg/beam/io/pubsubio"
 	"github.com/apache/beam/sdks/v2/go/pkg/beam/x/beamx"
+	"github.com/kodai-kumatani/dataflow-sample/internal/bigtable"
 )
 
 var (
@@ -41,12 +42,11 @@ func main() {
 	grouped := beam.GroupByKey(s.Scope("GroupMutations"), windowed)
 
 	// Batch write to Bigtable.
-	beam.ParDo0(s.Scope("WriteToBigtable"), &batchWriteFn{
+	beam.ParDo0(s.Scope("WriteToBigtable"), &bigtable.Writer{
 		Project:  *bigtableProject,
 		Instance: *bigtableInstance,
 		Table:    *bigtableTable,
 	}, grouped)
-
 	if err := beamx.Run(context.Background(), p); err != nil {
 		log.Fatalf("Failed to execute pipeline: %v", err)
 	}

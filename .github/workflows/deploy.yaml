@@ -5,7 +5,7 @@ on:
 
 env:
   PROJECT_ID: apache-beam-test-482413
-  REGION: us-west1
+  REGION: asia-northeast1
   JOB_NAME: go-job-1-1775060408659166000
   GCS_BUCKET: gs://apache-beam-test-482413-dataflow
 
@@ -32,11 +32,11 @@ jobs:
 
       - name: Deploy to Dataflow
         run: |
-          go run ./pubsub-bigtable/ \
-            --input_subscription=pubsub-bigtable-sub \
+          go run ./cmd/location/ \
+            --input_subscription=location-sub \
             --bigtable_project=${{ env.PROJECT_ID }} \
-            --bigtable_instance=pubsub-bigtable \
-            --bigtable_table=pubsub-bigtable \
+            --bigtable_instance=dataflow-sample \
+            --bigtable_table=location \
             --window_size=10 \
             --runner=dataflow \
             --project=${{ env.PROJECT_ID }} \

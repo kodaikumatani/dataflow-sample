@@ -1,0 +1,22 @@
+syntax = "proto3";
+
+package location.v1;
+
+option go_package = "github.com/kodai-kumatani/dataflow-sample/pkg/pb/location/v1;locationv1";
+
+import "google/protobuf/timestamp.proto";
+
+message Locations {
+  repeated Location items = 1;
+}
+
+message Location {
+  string walking_id = 1;
+  google.protobuf.Timestamp timestamp = 2;
+  double lat = 3;
+  double lng = 4;
+  double altitude = 5;
+  double accuracy = 6;
+  double speed = 7;
+  string user_id = 8;
+}
