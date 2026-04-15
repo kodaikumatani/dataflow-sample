@@ -4,13 +4,43 @@ import (
 	"context"
 	"fmt"
 	"log"
+	"reflect"
 
 	"cloud.google.com/go/bigtable"
+	"github.com/apache/beam/sdks/v2/go/pkg/beam"
 	"github.com/apache/beam/sdks/v2/go/pkg/beam/register"
 )
 
+// Operation represents a single Set operation on a Bigtable row.
+type Operation struct {
+	Family    string
+	Column    string
+	Timestamp int64 // microseconds since Unix epoch; 0 uses server time
+	Value     []byte
+}
+
+// Mutation is a serializable wrapper for bigtable mutations.
+// Use this as the value type in PCollection<KV<string, Mutation>>.
+type Mutation struct {
+	Ops []Operation
+}
+
+func (m *Mutation) toBigtableMutation() *bigtable.Mutation {
+	mut := bigtable.NewMutation()
+	for _, op := range m.Ops {
+		ts := bigtable.Timestamp(op.Timestamp)
+		if op.Timestamp == 0 {
+			ts = bigtable.Now()
+		}
+		mut.Set(op.Family, op.Column, ts, op.Value)
+	}
+	return mut
+}
+
 func init() {
 	register.DoFn3x1(&Writer{})
+	beam.RegisterType(reflect.TypeOf((*Mutation)(nil)).Elem())
+	beam.RegisterType(reflect.TypeOf((*Operation)(nil)).Elem())
 }
 
 // Writer writes mutations to Bigtable in bulk per window.
@@ -18,8 +48,6 @@ type Writer struct {
 	Project  string
 	Instance string
 	Table    string
-	Family   string
-	Column   string
 
 	client *bigtable.Client
 	table  *bigtable.Table
@@ -37,17 +65,14 @@ func (fn *Writer) Setup(ctx context.Context) error {
 	return nil
 }
 
-func (fn *Writer) ProcessElement(ctx context.Context, key string, iter func(*[]byte) bool) error {
+func (fn *Writer) ProcessElement(ctx context.Context, key string, iter func(*Mutation) bool) error {
 	var keys []string
 	var muts []*bigtable.Mutation
 
-	var b []byte
-	for iter(&b) {
-		mut := bigtable.NewMutation()
-		mut.Set(fn.Family, fn.Column, bigtable.Now(), b)
-
+	var m Mutation
+	for iter(&m) {
 		keys = append(keys, key)
-		muts = append(muts, mut)
+		muts = append(muts, m.toBigtableMutation())
 	}
 
 	if len(muts) == 0 {

@@ -46,8 +46,6 @@ func main() {
 		Project:  *bigtableProject,
 		Instance: *bigtableInstance,
 		Table:    *bigtableTable,
-		Family:   "measurements",
-		Column:   "data",
 	}, grouped)
 	if err := beamx.Run(context.Background(), p); err != nil {
 		log.Fatalf("Failed to execute pipeline: %v", err)

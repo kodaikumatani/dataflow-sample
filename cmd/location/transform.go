@@ -9,18 +9,19 @@ import (
 
 	"github.com/apache/beam/sdks/v2/go/pkg/beam/register"
 	"github.com/go-playground/validator/v10"
+	bt "github.com/kodai-kumatani/dataflow-sample/internal/bigtable"
 	pb "github.com/kodai-kumatani/dataflow-sample/pkg/pb/location"
 	"google.golang.org/protobuf/proto"
 )
 
 func init() {
 	register.DoFn3x0(&convertToMutationFn{})
-	register.Emitter2[string, []byte]()
+	register.Emitter2[string, bt.Mutation]()
 }
 
 type convertToMutationFn struct{}
 
-func (fn *convertToMutationFn) ProcessElement(ctx context.Context, msg []byte, emit func(string, []byte)) {
+func (fn *convertToMutationFn) ProcessElement(ctx context.Context, msg []byte, emit func(string, bt.Mutation)) {
 	var locs pb.Locations
 	if err := proto.Unmarshal(msg, &locs); err != nil {
 		log.Printf("proto.Unmarshal Locations: %v", err)
@@ -48,7 +49,11 @@ func (fn *convertToMutationFn) ProcessElement(ctx context.Context, msg []byte, e
 		}
 
 		rowKey := newRowKey(request.UserID, request.WakingID, request.Timestamp)
-		emit(rowKey, bytes)
+		emit(rowKey, bt.Mutation{
+			Ops: []bt.Operation{
+				{Family: "measurements", Column: "data", Value: bytes},
+			},
+		})
 	}
 }
 
