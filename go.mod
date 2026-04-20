@@ -4,7 +4,6 @@ go 1.25.7
 
 require (
 	cloud.google.com/go/bigtable v1.45.0
-	cloud.google.com/go/pubsub v1.50.1
 	github.com/apache/beam/sdks/v2 v2.72.0
 	github.com/go-playground/validator/v10 v10.30.2
 	google.golang.org/protobuf v1.36.11
@@ -20,6 +19,7 @@ require (
 	cloud.google.com/go/longrunning v0.8.0 // indirect
 	cloud.google.com/go/monitoring v1.24.3 // indirect
 	cloud.google.com/go/profiler v0.4.3 // indirect
+	cloud.google.com/go/pubsub v1.50.1 // indirect
 	cloud.google.com/go/pubsub/v2 v2.0.0 // indirect
 	cloud.google.com/go/storage v1.59.2 // indirect
 	github.com/GoogleCloudPlatform/opentelemetry-operations-go/detectors/gcp v1.30.0 // indirect

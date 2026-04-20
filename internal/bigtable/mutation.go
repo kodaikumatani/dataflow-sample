@@ -8,8 +8,8 @@ import (
 )
 
 func init() {
-	beam.RegisterType(reflect.TypeOf((*Mutation)(nil)).Elem())
-	beam.RegisterType(reflect.TypeOf((*Operation)(nil)).Elem())
+	beam.RegisterType(reflect.TypeFor[Mutation]())
+	beam.RegisterType(reflect.TypeFor[Operation]())
 }
 
 // Operation represents a single Set operation on a Bigtable row.
