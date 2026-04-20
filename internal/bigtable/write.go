@@ -43,7 +43,12 @@ func init() {
 	beam.RegisterType(reflect.TypeOf((*Operation)(nil)).Elem())
 }
 
-// Writer writes mutations to Bigtable in bulk per window.
+// maxBatchSize is a safety cap to avoid exceeding Bigtable's ApplyBulk limits
+// (100,000 mutations / 256MB per request). Not a performance tuning knob:
+// in streaming, Beam bundles usually finalize well before this is reached.
+const maxBatchSize = 1000
+
+// Writer writes mutations to Bigtable in bulk per bundle.
 type Writer struct {
 	Project  string
 	Instance string
@@ -51,6 +56,9 @@ type Writer struct {
 
 	client *bigtable.Client
 	table  *bigtable.Table
+
+	mutations []*bigtable.Mutation
+	rowKeys   []string
 }
 
 func (fn *Writer) Setup(ctx context.Context) error {
@@ -65,30 +73,45 @@ func (fn *Writer) Setup(ctx context.Context) error {
 	return nil
 }
 
-func (fn *Writer) ProcessElement(ctx context.Context, key string, iter func(*Mutation) bool) error {
-	var keys []string
-	var muts []*bigtable.Mutation
+func (fn *Writer) StartBundle(ctx context.Context) {
+	fn.mutations = make([]*bigtable.Mutation, 0, maxBatchSize)
+	fn.rowKeys = make([]string, 0, maxBatchSize)
+}
 
-	var m Mutation
-	for iter(&m) {
-		keys = append(keys, key)
-		muts = append(muts, m.toBigtableMutation())
+func (fn *Writer) ProcessElement(ctx context.Context, key string, m Mutation) error {
+	fn.rowKeys = append(fn.rowKeys, key)
+	fn.mutations = append(fn.mutations, m.toBigtableMutation())
+
+	if len(fn.mutations) >= maxBatchSize {
+		return fn.flush(ctx)
 	}
 
-	if len(muts) == 0 {
+	return nil
+}
+
+func (fn *Writer) FinishBundle(ctx context.Context) error {
+	return fn.flush(ctx)
+}
+
+func (fn *Writer) flush(ctx context.Context) error {
+	if len(fn.mutations) == 0 {
 		return nil
 	}
 
-	errs, err := fn.table.ApplyBulk(ctx, keys, muts)
+	errs, err := fn.table.ApplyBulk(ctx, fn.rowKeys, fn.mutations)
 	if err != nil {
 		return err
 	}
 
 	for i, e := range errs {
 		if e != nil {
-			log.Printf("ApplyBulk error for row %s: %v", keys[i], e)
+			log.Printf("ApplyBulk error for row %s: %v", fn.rowKeys[i], e)
 		}
 	}
+
+	// clear slices but retain capacity for the next batch
+	fn.mutations = fn.mutations[:0]
+	fn.rowKeys = fn.rowKeys[:0]
 
 	return nil
 }
