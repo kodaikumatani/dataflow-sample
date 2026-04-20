@@ -182,7 +182,7 @@ const file_location_location_proto_rawDesc = "" +
 	"\baltitude\x18\x05 \x01(\x01R\baltitude\x12\x1a\n" +
 	"\baccuracy\x18\x06 \x01(\x01R\baccuracy\x12\x14\n" +
 	"\x05speed\x18\a \x01(\x01R\x05speed\x12\x17\n" +
-	"\auser_id\x18\b \x01(\tR\x06userIdBIZGgithub.com/kodai-kumatani/dataflow-sample/pkg/pb/location/v1;locationv1b\x06proto3"
+	"\auser_id\x18\b \x01(\tR\x06userIdBQZOgithub.com/kodai-kumatani/beam-pubsub-to-bigtable/pkg/pb/location/v1;locationv1b\x06proto3"
 
 var (
 	file_location_location_proto_rawDescOnce sync.Once

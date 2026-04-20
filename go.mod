@@ -1,4 +1,4 @@
-module github.com/kodai-kumatani/dataflow-sample
+module github.com/kodai-kumatani/beam-pubsub-to-bigtable
 
 go 1.25.7
 

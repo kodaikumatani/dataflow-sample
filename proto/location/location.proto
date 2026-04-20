@@ -2,7 +2,7 @@ syntax = "proto3";
 
 package location.v1;
 
-option go_package = "github.com/kodai-kumatani/dataflow-sample/pkg/pb/location/v1;locationv1";
+option go_package = "github.com/kodai-kumatani/beam-pubsub-to-bigtable/pkg/pb/location/v1;locationv1";
 
 import "google/protobuf/timestamp.proto";
 

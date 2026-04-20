@@ -8,7 +8,7 @@ import (
 	"github.com/apache/beam/sdks/v2/go/pkg/beam"
 	"github.com/apache/beam/sdks/v2/go/pkg/beam/io/pubsubio"
 	"github.com/apache/beam/sdks/v2/go/pkg/beam/x/beamx"
-	"github.com/kodai-kumatani/dataflow-sample/internal/bigtable"
+	"github.com/kodai-kumatani/beam-pubsub-to-bigtable/internal/bigtable"
 )
 
 var (

@@ -9,8 +9,8 @@ import (
 
 	"github.com/apache/beam/sdks/v2/go/pkg/beam/register"
 	"github.com/go-playground/validator/v10"
-	bt "github.com/kodai-kumatani/dataflow-sample/internal/bigtable"
-	pb "github.com/kodai-kumatani/dataflow-sample/pkg/pb/location"
+	bt "github.com/kodai-kumatani/beam-pubsub-to-bigtable/internal/bigtable"
+	pb "github.com/kodai-kumatani/beam-pubsub-to-bigtable/pkg/pb/location"
 	"google.golang.org/protobuf/proto"
 )
 
